@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const apiUrl = "https://seo-interview.herokuapp.com/companies"
 const pageLimit = 100
+// const outputFile = "../tremendous-ui/src/data/companies.json"
 const outputFile = "companies.json"
 
 const NAV_TYPE = "nav"
@@ -50,7 +51,7 @@ const organizeCompaniesByFirstLetter = companyNames => {
 }
 
 const organizeChildrenIntoMaxSize = parentNode => {
-	console.log("Organizing nodes for " + parentNode.prefix + " with " + parentNode.children.length + " entries")
+	console.log("Organizing nodes for " + parentNode.parent + parentNode.prefix + " with " + parentNode.children.length + " entries")
 
 	const numEntries = parentNode.children.length
 	// update with newest parent
@@ -61,7 +62,7 @@ const organizeChildrenIntoMaxSize = parentNode => {
 	// create numBuckets = min
 
 	const numEntriesPerBucket = Math.ceil(numEntries / pageLimit)
-	console.log("Each bucket has " + numEntriesPerBucket)
+	// console.log("Each bucket has " + numEntriesPerBucket)
 	const batchedEntries = _.chunk(parentNode.children, numEntriesPerBucket)
 
 	// reset the parent node's children
@@ -105,8 +106,6 @@ const createTree = (companyNames) => {
 // write full tree to JSON file
 const writeTreeToJson = tree => {
 	console.log("Writing tree to JSON file")
-	console.log(tree.children[0].children.length)
-	console.log(tree)
 
 	fs.writeFile(outputFile, JSON.stringify(tree, null, 2), function(err) {
 	    if (err) {
