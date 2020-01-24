@@ -39,6 +39,8 @@ const addCompanyToRoot = company => {
 	letterBucket.children.push({
 		type: COMP_TYPE,
 		prefix: company,
+		first: company,
+		last: company,
 		parent: letterBucket.prefix,
 		children: null
 	})
@@ -77,11 +79,18 @@ const organizeChildrenIntoMaxSize = parentNode => {
 			children: batch
 		}
 
-		parentNode.children.push(newNode)
 		organizeChildrenIntoMaxSize(newNode)
+
+		// console.log(newNodeName)
+		newNode.first = newNode.children[0].first
+		newNode.last = newNode.children[newNode.children.length - 1].last
+
+		parentNode.children.push(newNode)
 
 		i += 1
 	})
+
+
 }
 
 // group companies by first letter
@@ -97,7 +106,12 @@ const createTree = (companyNames) => {
 	// then organize all children correctly for each letter
 	_.each(rootNode.children, letterBucket => {
 		organizeChildrenIntoMaxSize(letterBucket)
+		letterBucket.first = letterBucket.children[0].first
+		letterBucket.last = letterBucket.children[letterBucket.children.length - 1].last
 	})
+
+	rootNode.first = rootNode.children[0].first
+	rootNode.last = rootNode.children[rootNode.children.length - 1].last
 
 	// write to JSON
 	writeTreeToJson(rootNode)
