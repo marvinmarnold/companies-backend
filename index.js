@@ -1,8 +1,10 @@
-var request = require('request');
-var _ = require("underscore")
+const request = require('request');
+const _ = require("underscore")
+const fs = require('fs');
 
 const apiUrl = "https://seo-interview.herokuapp.com/companies"
 const pageLimit = 100
+const outputFile = "companies.json"
 
 const NAV_TYPE = "nav"
 const COMP_TYPE = "company"
@@ -16,7 +18,7 @@ let rootNode = {
 }
 
 const addCompanyToRoot = company => {
-	const firstLetter = company.charAt(0)
+	const firstLetter = company.charAt(0).toLowerCase()
 	let letterBucket = _.find(rootNode.children, child => child.prefix === firstLetter)
 
 	if (!letterBucket) {
@@ -24,7 +26,7 @@ const addCompanyToRoot = company => {
 		letterBucket = {
 			type: NAV_TYPE,
 			prefix: firstLetter,
-			parent: rootNode,
+			parent: rootNode.prefix,
 			children: [
 
 			]
@@ -36,7 +38,7 @@ const addCompanyToRoot = company => {
 	letterBucket.children.push({
 		type: COMP_TYPE,
 		prefix: company,
-		parent: letterBucket,
+		parent: letterBucket.prefix,
 		children: null
 	})
 }
@@ -51,7 +53,11 @@ const organizeChildrenIntoMaxSize = parentNode => {
 	console.log("Organizing nodes for " + parentNode.prefix + " with " + parentNode.children.length + " entries")
 
 	const numEntries = parentNode.children.length
-	if (numEntries <= pageLimit) return
+	// update with newest parent
+	if (numEntries <= pageLimit) {
+		_.each(parentNode.children, child => child.parentNode = parentNode.parent + parentNode.prefix)
+		return
+	}
 	// create numBuckets = min
 
 	const numEntriesPerBucket = Math.ceil(numEntries / pageLimit)
@@ -66,7 +72,7 @@ const organizeChildrenIntoMaxSize = parentNode => {
 		const newNode = {
 			type: NAV_TYPE,
 			prefix: "-" + i,
-			parent: parentNode,
+			parent: parentNode.parent + parentNode.prefix,
 			children: batch
 		}
 
@@ -101,6 +107,12 @@ const writeTreeToJson = tree => {
 	console.log("Writing tree to JSON file")
 	console.log(tree.children[0].children.length)
 	console.log(tree)
+
+	fs.writeFile(outputFile, JSON.stringify(tree, null, 2), function(err) {
+	    if (err) {
+	        console.log(err);
+	    }
+	});
 }
 
 // fetch companies from https://seo-interview.herokuapp.com/companies
